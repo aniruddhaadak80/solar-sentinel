@@ -4,7 +4,7 @@ import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
-const SITE = "https://solar-sentinel.vercel.app";
+const SITE = "https://solar-sentinel-vert.vercel.app";
 
 export const metadata: Metadata = {
   title: "Solar Sentinel — Live Space-Weather Intelligence",

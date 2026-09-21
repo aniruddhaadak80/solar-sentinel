@@ -4,14 +4,14 @@
 
 **Watch solar storms hit Earth live — risk engine, 3D planet, agent tools, verifiable seals.**
 
-[![Live Demo](https://img.shields.io/badge/demo-live-22d3ee?style=for-the-badge)](https://solar-sentinel.vercel.app)
+[![Live Demo](https://img.shields.io/badge/demo-live-22d3ee?style=for-the-badge)](https://solar-sentinel-vert.vercel.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34d399?style=for-the-badge)](./LICENSE)
 [![Next.js](https://img.shields.io/badge/next.js-16-ffffff?style=for-the-badge)](https://nextjs.org/)
 [![Feeds: NOAA + NASA](https://img.shields.io/badge/feeds-NOAA_%2B_NASA-fbbf24?style=for-the-badge)](https://www.swpc.noaa.gov/)
 [![MCP ready](https://img.shields.io/badge/MCP-tools-34d399?style=for-the-badge)](./public/mcp.json)
 [![CI](https://img.shields.io/badge/ci-passing-34d399?style=for-the-badge)](./.github/workflows/ci.yml)
 
-[Live App](https://solar-sentinel.vercel.app) · [API](https://solar-sentinel.vercel.app/api/health) · [MCP](https://solar-sentinel.vercel.app/api/mcp) · [Issues](https://github.com/aniruddhaadak80/solar-sentinel/issues)
+[Live App](https://solar-sentinel-vert.vercel.app) · [API](https://solar-sentinel-vert.vercel.app/api/health) · [MCP](https://solar-sentinel-vert.vercel.app/api/mcp) · [Issues](https://github.com/aniruddhaadak80/solar-sentinel/issues)
 
 </div>
 
@@ -150,15 +150,15 @@ Zero env vars. Open http://localhost:3000 — if NOAA/NASA are unreachable you g
 ## 🔌 API
 
 ```bash
-curl https://solar-sentinel.vercel.app/api/health
-curl https://solar-sentinel.vercel.app/api/kp
-curl https://solar-sentinel.vercel.app/api/solar-wind
-curl https://solar-sentinel.vercel.app/api/flares
-curl https://solar-sentinel.vercel.app/api/risk
-curl -X POST https://solar-sentinel.vercel.app/api/risk \
+curl https://solar-sentinel-vert.vercel.app/api/health
+curl https://solar-sentinel-vert.vercel.app/api/kp
+curl https://solar-sentinel-vert.vercel.app/api/solar-wind
+curl https://solar-sentinel-vert.vercel.app/api/flares
+curl https://solar-sentinel-vert.vercel.app/api/risk
+curl -X POST https://solar-sentinel-vert.vercel.app/api/risk \
   -H 'Content-Type: application/json' \
   -d '{"kp":6.2,"solarWindSpeed":610,"density":12,"bzGsm":-11,"maxFlareClass":"M4.2"}'
-curl -X POST https://solar-sentinel.vercel.app/api/mcp \
+curl -X POST https://solar-sentinel-vert.vercel.app/api/mcp \
   -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
@@ -168,7 +168,7 @@ curl -X POST https://solar-sentinel.vercel.app/api/mcp \
 ```json
 {
   "mcpServers": {
-    "solar-sentinel": { "url": "https://solar-sentinel.vercel.app/api/mcp" }
+    "solar-sentinel": { "url": "https://solar-sentinel-vert.vercel.app/api/mcp" }
   }
 }
 ```

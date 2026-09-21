@@ -236,7 +236,7 @@ export default async function Home() {
             <div className="font-mono text-[11px] tracking-widest text-slate-400">ADD TO YOUR AGENT · public/mcp.json</div>
             <pre className="mt-2 overflow-auto font-mono text-[11px] leading-relaxed text-slate-300">{`{
   "mcpServers": {
-    "solar-sentinel": { "url": "https://solar-sentinel.vercel.app/api/mcp" }
+    "solar-sentinel": { "url": "https://solar-sentinel-vert.vercel.app/api/mcp" }
   }
 }`}</pre>
           </div>

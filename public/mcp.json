@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "solar-sentinel": {
-      "url": "https://solar-sentinel.vercel.app/api/mcp",
+      "url": "https://solar-sentinel-vert.vercel.app/api/mcp",
       "description": "Live space-weather intelligence: Kp, solar wind, flares, deterministic storm-risk engine, seal verification."
     }
   }
