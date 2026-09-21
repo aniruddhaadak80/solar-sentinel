@@ -57,7 +57,7 @@ export const FALLBACK_FLARES: SolarFlare[] = [
 ];
 
 export const FEED_SOURCES = {
-  wind: "https://services.swpc.noaa.gov/products/solar-wind/",
+  wind: "https://services.swpc.noaa.gov/json/rtsw/",
   kp: "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
   flares: "https://api.nasa.gov/DONKI/FLR",
 } as const;

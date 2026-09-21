@@ -55,8 +55,8 @@ Two NOAA streams plus NASA flares, normalized to typed records, cached at the ed
 
 ```mermaid
 flowchart TB
-    S1[SWPC plasma-7-day]:::live --> N[Normalizer<br/>src/lib/feeds.ts]:::live
-    S2[SWPC mag-7-day]:::live --> N
+    S1[RTSW wind 1-min<br/>SOLAR-1 primary]:::live --> N[Normalizer<br/>src/lib/feeds.ts]:::live
+    S2[RTSW mag 1-min]:::live --> N
     S3[SWPC planetary K-index]:::live --> K[KP parser]:::live
     S4[NASA DONKI FLR<br/>DEMO_KEY]:::warn --> N
     N --> C{Fetch OK?}:::warn

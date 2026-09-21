@@ -18,49 +18,87 @@ async function fetchJson(url: string, timeoutMs = 9000): Promise<unknown> {
   }
 }
 
-/** NOAA solar-wind plasma + mag, joined on timestamp. Falls back to sealed samples offline. */
+interface RtswWind {
+  time_tag?: string;
+  active?: boolean;
+  proton_speed?: number | null;
+  proton_temperature?: number | null;
+  proton_density?: number | null;
+}
+
+interface RtswMag {
+  time_tag?: string;
+  active?: boolean;
+  bt?: number | null;
+  bz_gsm?: number | null;
+}
+
+/**
+ * NOAA solar wind via the post-2026 RTSW feeds (SOLAR-1 primary, ACE backup):
+ * json/rtsw/rtsw_wind_1m.json + rtsw_mag_1m.json, joined on minute timestamp.
+ * Prefers active-spacecraft rows, downsamples to ~every 15 min. Sealed fallback offline.
+ */
 export async function getSolarWind(): Promise<FeedEnvelope<SolarWindPoint>> {
   const fetchedAt = new Date().toISOString();
   try {
-    const [plasma, mag] = await Promise.all([
-      fetchJson(`${FEED_SOURCES.wind}plasma-7-day.json`) as Promise<string[][]>,
-      fetchJson(`${FEED_SOURCES.wind}mag-7-day.json`) as Promise<string[][]>,
+    const [wind, mag] = await Promise.all([
+      fetchJson(`${FEED_SOURCES.wind}rtsw_wind_1m.json`, 20000) as Promise<RtswWind[]>,
+      fetchJson(`${FEED_SOURCES.wind}rtsw_mag_1m.json`, 20000) as Promise<RtswMag[]>,
     ]);
-    const magByTime = new Map<string, string[]>();
-    for (let i = 1; i < mag.length; i++) magByTime.set(mag[i][0], mag[i]);
-    const data: SolarWindPoint[] = [];
-    for (let i = 1; i < plasma.length; i++) {
-      const row = plasma[i];
-      const m = magByTime.get(row[0]);
-      const speed = num(row[2]);
-      if (!Number.isFinite(speed)) continue;
-      data.push({
-        time: row[0],
+    if (!Array.isArray(wind) || !Array.isArray(mag)) throw new Error("unexpected rtsw shape");
+    const magByTime = new Map<string, RtswMag>();
+    for (const m of mag) {
+      if (typeof m.time_tag !== "string") continue;
+      const prev = magByTime.get(m.time_tag);
+      if (!prev || (m.active && !prev.active)) magByTime.set(m.time_tag, m);
+    }
+    const byTime = new Map<string, SolarWindPoint>();
+    for (const w of wind) {
+      if (typeof w.time_tag !== "string") continue;
+      const speed = num(w.proton_speed);
+      if (!Number.isFinite(speed) || speed <= 0 || speed > 2500) continue;
+      const m = magByTime.get(w.time_tag.slice(0, 16));
+      const prev = byTime.get(w.time_tag);
+      if (prev && !w.active) continue;
+      byTime.set(w.time_tag, {
+        time: w.time_tag.length === 16 ? `${w.time_tag}:00` : w.time_tag,
         speed,
-        density: num(row[1], 5),
-        temperature: num(row[3], 100000),
-        bzGsm: m ? num(m[3], 0) : 0,
-        bt: m ? num(m[6], 5) : 5,
+        density: num(w.proton_density, 5),
+        temperature: num(w.proton_temperature, 100000),
+        bzGsm: m ? num(m.bz_gsm, 0) : 0,
+        bt: m ? num(m.bt, 5) : 5,
       });
     }
-    const tail = data.slice(-96);
-    if (tail.length === 0) throw new Error("empty plasma feed");
-    return { data: tail, count: tail.length, fetchedAt, fallback: false, source: FEED_SOURCES.wind };
+    const sorted = [...byTime.values()].sort((a, b) => (a.time < b.time ? -1 : 1));
+    // Downsample 1-min cadence to ~15-min steps, cap at 96 points.
+    const step = Math.max(1, Math.floor(sorted.length / 96));
+    const data = sorted.filter((_, i) => i % step === 0).slice(-96);
+    if (data.length === 0) throw new Error("empty rtsw feed");
+    return { data, count: data.length, fetchedAt, fallback: false, source: FEED_SOURCES.wind };
   } catch {
     return { data: FALLBACK_WIND, count: FALLBACK_WIND.length, fetchedAt, fallback: true, source: FEED_SOURCES.wind };
   }
 }
 
-/** NOAA planetary K-index. Falls back to sealed samples offline. */
+/** NOAA planetary K-index (object rows since 2026; legacy header rows tolerated). Sealed fallback offline. */
 export async function getKp(): Promise<FeedEnvelope<KpPoint>> {
   const fetchedAt = new Date().toISOString();
   try {
-    const raw = (await fetchJson(FEED_SOURCES.kp)) as string[][];
+    const raw = (await fetchJson(FEED_SOURCES.kp)) as unknown[];
     const data: KpPoint[] = [];
-    for (let i = 1; i < raw.length; i++) {
-      const kp = num(raw[i][1]);
-      if (!Number.isFinite(kp)) continue;
-      data.push({ time: raw[i][0], kp, aRunning: num(raw[i][2], 0), stationCount: Math.round(num(raw[i][3], 0)) });
+    for (const row of raw) {
+      if (Array.isArray(row)) {
+        if (typeof row[0] !== "string" || row[0] === "time_tag") continue;
+        const kp = num(row[1]);
+        if (!Number.isFinite(kp)) continue;
+        data.push({ time: row[0], kp, aRunning: num(row[2], 0), stationCount: Math.round(num(row[3], 0)) });
+      } else if (row && typeof row === "object") {
+        const r = row as Record<string, unknown>;
+        if (typeof r.time_tag !== "string") continue;
+        const kp = num(r.Kp ?? r.kp);
+        if (!Number.isFinite(kp)) continue;
+        data.push({ time: r.time_tag, kp, aRunning: num(r.a_running, 0), stationCount: Math.round(num(r.station_count, 0)) });
+      }
     }
     const tail = data.slice(-40);
     if (tail.length === 0) throw new Error("empty kp feed");
