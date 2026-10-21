@@ -99,8 +99,11 @@ export async function POST(req: Request) {
           return ok({ content: [{ type: "text", text: JSON.stringify({ assessment, seal }) }] });
         }
         if (name === "verify_seal_chain") {
-          const records = Array.isArray(body.params?.records) ? (body.params.records as unknown[]) : [];
-          const seals = Array.isArray(body.params?.seals) ? (body.params.seals as string[]) : [];
+          const records = Array.isArray(args.records) ? (args.records as unknown[]) : [];
+          const seals = Array.isArray(args.seals) ? (args.seals as string[]) : [];
+          if (!records.length || records.length !== seals.length) {
+            return err(-32602, "verify_seal_chain needs the same number of records and seals");
+          }
           return ok({ content: [{ type: "text", text: JSON.stringify({ valid: verifyChain(records, seals) }) }] });
         }
         return err(-32601, `unknown tool: ${name}`);
