@@ -49,8 +49,11 @@ export async function getSolarWind(): Promise<FeedEnvelope<SolarWindPoint>> {
     const magByTime = new Map<string, RtswMag>();
     for (const m of mag) {
       if (typeof m.time_tag !== "string") continue;
-      const prev = magByTime.get(m.time_tag);
-      if (!prev || (m.active && !prev.active)) magByTime.set(m.time_tag, m);
+      // Key by the minute prefix: the wind rows are looked up with the same
+      // prefix, and the raw `time_tag` carries a seconds component.
+      const key = m.time_tag.slice(0, 16);
+      const prev = magByTime.get(key);
+      if (!prev || (m.active && !prev.active)) magByTime.set(key, m);
     }
     const byTime = new Map<string, SolarWindPoint>();
     for (const w of wind) {
